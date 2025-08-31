@@ -1,0 +1,608 @@
+
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>어비스 구멍 출현 시간표</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+```
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        overflow-x: hidden;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header {
+        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .header h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+        font-weight: 400;
+        position: relative;
+        z-index: 1;
+    }
+
+    .next-spawn {
+        background: linear-gradient(135deg, #2d3748, #4a5568);
+        color: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(45, 55, 72, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .next-spawn::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .next-spawn-title {
+        font-size: 1.1em;
+        font-weight: 500;
+        margin-bottom: 8px;
+        opacity: 0.9;
+    }
+
+    .countdown {
+        font-size: 2em;
+        font-weight: 700;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .content {
+        padding: 30px;
+    }
+
+    .filter-controls {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-bottom: 30px;
+    }
+
+    .filter-btn {
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #e9ecef;
+        padding: 10px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.75em;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
+        flex: 1;
+        line-height: 1.2;
+    }
+
+    .filter-btn:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .filter-btn.active {
+        background: #343a40;
+        color: white;
+        border-color: #343a40;
+    }
+
+    .filter-btn.active:hover {
+        background: #495057;
+    }
+
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .schedule-item {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .schedule-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #2d3748, #4a5568);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .schedule-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .schedule-item:hover::before {
+        opacity: 1;
+    }
+
+    .schedule-item.next {
+        background: linear-gradient(135deg, #2d3748, #4a5568);
+        color: white;
+        transform: scale(1.02);
+        box-shadow: 0 15px 40px rgba(45, 55, 72, 0.3);
+    }
+
+    .schedule-item.next::before {
+        background: rgba(255, 255, 255, 0.3);
+        opacity: 1;
+    }
+
+    .schedule-item.past {
+        opacity: 0.6;
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+
+    .schedule-item.hidden {
+        display: none;
+    }
+
+    .date {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .schedule-item.next .date {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .schedule-item.past .date {
+        color: #adb5bd;
+    }
+
+    .time {
+        font-size: 2.2em;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 12px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .schedule-item.next .time {
+        color: white;
+    }
+
+    .schedule-item.past .time {
+        color: #6c757d;
+    }
+
+    .time-until {
+        background: rgba(45, 55, 72, 0.08);
+        color: #2d3748;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.9em;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .schedule-item.next .time-until {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .schedule-item.past .time-until {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+
+    .info {
+        text-align: center;
+        color: #6c757d;
+        margin-top: 40px;
+        padding: 20px;
+        background: rgba(45, 55, 72, 0.04);
+        border-radius: 12px;
+        font-size: 0.9em;
+        line-height: 1.6;
+    }
+
+    .info strong {
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { 
+            box-shadow: 0 15px 40px rgba(238, 90, 82, 0.4);
+        }
+        50% { 
+            box-shadow: 0 15px 50px rgba(238, 90, 82, 0.6);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            margin: 10px;
+            border-radius: 16px;
+        }
+        
+        .header {
+            padding: 30px 20px;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .next-spawn {
+            margin: 20px;
+            padding: 20px;
+        }
+        
+        .countdown {
+            font-size: 1.6em;
+        }
+        
+        .schedule-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .schedule-item {
+            padding: 20px;
+        }
+        
+        .filter-controls {
+            margin-left: -20px;
+            margin-right: -20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            gap: 8px;
+        }
+        
+        .filter-btn {
+            font-size: 0.75em;
+            padding: 8px 12px;
+            min-width: 50px;
+        }
+        
+        .time {
+            font-size: 1.8em;
+        }
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕳️ 어비스 구멍 출현 시간표</h1>
+            <p>정확한 출현 시간을 미리 확인하세요</p>
+        </div>
+
+```
+    <div class="next-spawn" id="nextSpawn">
+        <div class="next-spawn-title">다음 출현까지</div>
+        <div class="countdown" id="countdown">계산 중...</div>
+    </div>
+
+    <div class="content">
+        <div class="filter-controls">
+            <button class="filter-btn active" data-filter="morning">
+                아침<br>(06-09)
+            </button>
+            <button class="filter-btn active" data-filter="daytime">
+                주간<br>(09-18)
+            </button>
+            <button class="filter-btn active" data-filter="evening">
+                저녁<br>(18-00)
+            </button>
+            <button class="filter-btn active" data-filter="night">
+                새벽<br>(00-06)
+            </button>
+        </div>
+
+        <div class="schedule-grid" id="scheduleGrid">
+            <!-- 스케줄이 여기에 표시됩니다 -->
+        </div>
+
+        <div class="info">
+            📅 <strong>기준 시간:</strong> 2025년 8월 25일 14시 28분<br>
+            ⏱️ <strong>출현 간격:</strong> 36시간 15분 (2,175분)<br>
+            🔄 <strong>자동 업데이트:</strong> 매 분마다 시간 갱신
+        </div>
+    </div>
+</div>
+
+<script>
+    // 기준 시간: 2025년 8월 25일 14시 28분
+    const baseTime = new Date('2025-08-25T14:28:00');
+    const intervalMinutes = 36 * 60 + 15; // 36시간 15분을 분 단위로 변환
+    let activeFilters = ['morning', 'daytime', 'evening', 'night']; // 처음에는 모든 시간대 활성화
+
+    // 시간대 분류 함수
+    function getTimeCategory(hour) {
+        if (hour >= 6 && hour < 9) return 'morning';      // 아침: 06-09
+        else if (hour >= 9 && hour < 18) return 'daytime'; // 주간: 09-18
+        else if (hour >= 18 || hour === 0) return 'evening'; // 저녁: 18-24 (00시 포함)
+        else return 'night'; // 새벽: 01-06
+    }
+
+    // 필터 버튼 이벤트 리스너
+    function initializeFilters() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                
+                if (activeFilters.includes(filter)) {
+                    // 이미 활성화된 필터면 제거
+                    activeFilters = activeFilters.filter(f => f !== filter);
+                    btn.classList.remove('active');
+                } else {
+                    // 새로운 필터 추가
+                    activeFilters.push(filter);
+                    btn.classList.add('active');
+                }
+                
+                // 필터 적용
+                applyFilters();
+            });
+        });
+    }
+
+    // 필터 적용 함수
+    function applyFilters() {
+        const scheduleItems = document.querySelectorAll('.schedule-item');
+        
+        scheduleItems.forEach(item => {
+            const timeText = item.querySelector('.time').textContent;
+            const hour = parseInt(timeText.split(':')[0]);
+            const category = getTimeCategory(hour);
+            
+            if (activeFilters.includes(category)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    function calculateNextSpawns(count = 15) {
+        const now = new Date();
+        const spawns = [];
+        
+        // 현재 시간 이전의 가장 가까운 스폰 시간을 찾기
+        let currentSpawn = new Date(baseTime);
+        while (currentSpawn < now) {
+            currentSpawn = new Date(currentSpawn.getTime() + intervalMinutes * 60 * 1000);
+        }
+        
+        // 현재부터 미래의 스폰 시간들을 계산
+        for (let i = 0; i < count; i++) {
+            spawns.push(new Date(currentSpawn.getTime() + (i * intervalMinutes * 60 * 1000)));
+        }
+        
+        return spawns;
+    }
+
+    function formatDateTime(date) {
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        const weekday = weekdays[date.getDay()];
+        
+        return {
+            date: `${month}월 ${day}일`,
+            weekday: weekday,
+            time: `${hours}:${minutes}`
+        };
+    }
+
+    function getTimeUntil(targetDate) {
+        const now = new Date();
+        const diff = targetDate - now;
+        
+        if (diff <= 0) return '출현 완료';
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        if (days > 0) {
+            return `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`;
+        } else if (hours > 0) {
+            return `${hours}시간 ${minutes}분 ${seconds}초`;
+        } else if (minutes > 0) {
+            return `${minutes}분 ${seconds}초`;
+        } else {
+            return `${seconds}초`;
+        }
+    }
+
+    function generateSchedule() {
+        const spawns = calculateNextSpawns(15);
+        const scheduleGrid = document.getElementById('scheduleGrid');
+        const now = new Date();
+        
+        scheduleGrid.innerHTML = '';
+        
+        spawns.forEach((spawn, index) => {
+            const formatted = formatDateTime(spawn);
+            const isPast = spawn < now;
+            const isNext = index === 0 && !isPast;
+            const hour = spawn.getHours();
+            const category = getTimeCategory(hour);
+            
+            const item = document.createElement('div');
+            item.className = `schedule-item ${isPast ? 'past' : ''} ${isNext ? 'next pulse' : ''}`;
+            item.dataset.category = category;
+            
+            let timeUntilHtml = '';
+            if (!isPast) {
+                const timeUntil = getTimeUntil(spawn);
+                timeUntilHtml = `<div class="time-until">${timeUntil} 후</div>`;
+            } else {
+                timeUntilHtml = `<div class="time-until">완료됨</div>`;
+            }
+            
+            item.innerHTML = `
+                <div class="date">
+                    <span>${formatted.date}</span>
+                    <span style="opacity: 0.7;">(${formatted.weekday})</span>
+                </div>
+                <div class="time">${formatted.time}</div>
+                ${timeUntilHtml}
+            `;
+            
+            scheduleGrid.appendChild(item);
+        });
+        
+        // 필터 적용
+        applyFilters();
+        
+        // 다음 출현 시간 업데이트
+        updateNextSpawn();
+    }
+
+    function updateNextSpawn() {
+        const spawns = calculateNextSpawns(1);
+        const nextSpawn = spawns[0];
+        const countdownElement = document.getElementById('countdown');
+        
+        function updateCountdown() {
+            const timeUntil = getTimeUntil(nextSpawn);
+            countdownElement.textContent = timeUntil;
+            
+            if (timeUntil === '출현 완료') {
+                setTimeout(() => {
+                    generateSchedule();
+                }, 1000);
+            }
+        }
+        
+        updateCountdown();
+    }
+
+    // 페이지 로드 시 스케줄 생성 및 필터 초기화
+    generateSchedule();
+    initializeFilters();
+    
+    // 1초마다 스케줄 업데이트 (실시간 카운트다운)
+    setInterval(() => {
+        const items = document.querySelectorAll('.schedule-item:not(.past)');
+        items.forEach((item, index) => {
+            const timeUntilDiv = item.querySelector('.time-until');
+            if (timeUntilDiv && !item.classList.contains('past')) {
+                const spawns = calculateNextSpawns(15);
+                const spawn = spawns[index];
+                if (spawn) {
+                    const timeUntil = getTimeUntil(spawn);
+                    timeUntilDiv.textContent = `${timeUntil} 후`;
+                }
+            }
+        });
+        
+        // 메인 카운트다운도 업데이트
+        updateNextSpawn();
+    }, 1000);
+
+    // 매 초마다 메인 카운트다운만 업데이트 (더 정확한 시간 표시)
+    setInterval(() => {
+        updateNextSpawn();
+    }, 1000);
+</script>
+```
+
+</body>
+</html>
